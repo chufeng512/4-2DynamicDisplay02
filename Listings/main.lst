@@ -1,0 +1,89 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              08/02/2024 16:06:10 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\Keil5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.l
+                    -st) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <STC89C5xRC.H>
+   2          #include <Intrins.h>
+   3          //增加自定义类型，简化代码编写
+   4          typedef unsigned char u8;
+   5          typedef unsigned int u16;
+   6          
+   7          //需求：静态数码管显示,让第四个数码管显示5
+   8          //手册信息：DIG5对应Y4,P15 P14 P13 1 0 0
+   9          //封装显示状态
+  10          
+  11          //延时函数
+  12          void Delay1ms(u8 ms)    //@11.0592MHz
+  13          {
+  14   1        unsigned char i, j;
+  15   1        while(ms--)
+  16   1        {
+  17   2          _nop_();
+  18   2          i = 2;
+  19   2          j = 199;
+  20   2          do
+  21   2          {
+  22   3            while (--j);
+  23   3          } while (--i);
+  24   2        }
+  25   1      
+  26   1      }
+  27          
+  28          //定义数组，封装数字
+  29          u8 NixieTable[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F};
+  30          
+  31          //数码管显示
+  32          void NixieDisPlay(u8 Location,DisplayNum)
+  33          {
+  34   1        switch(Location)
+  35   1        {
+  36   2          case 1:P15 = 0;P14 = 0;P13 = 0;break;
+  37   2          case 2:P15 = 0;P14 = 0;P13 = 1;break;
+  38   2          case 3:P15 = 0;P14 = 1;P13 = 0;break;
+  39   2          case 4:P15 = 0;P14 = 1;P13 = 1;break;
+  40   2          case 5:P15 = 1;P14 = 0;P13 = 0;break;
+  41   2          case 6:P15 = 1;P14 = 0;P13 = 1;break;
+  42   2          case 7:P15 = 1;P14 = 1;P13 = 0;break;
+  43   2          case 8:P15 = 1;P14 = 1;P13 = 1;break;
+  44   2        }
+  45   1        P0 = NixieTable[DisplayNum];
+  46   1        Delay1ms(1);
+  47   1        P0 = 0x00;
+  48   1      }
+  49          
+  50          void main()
+  51          {
+  52   1      
+  53   1      
+  54   1        while(1)
+C51 COMPILER V9.60.7.0   MAIN                                                              08/02/2024 16:06:10 PAGE 2   
+
+  55   1        {
+  56   2          NixieDisPlay(1,1);
+  57   2          
+  58   2          NixieDisPlay(2,2);
+  59   2      
+  60   2          NixieDisPlay(3,3);
+  61   2      
+  62   2        } 
+  63   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    150    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
