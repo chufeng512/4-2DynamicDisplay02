@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              08/02/2024 16:06:10 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              08/02/2024 16:51:16 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -10,79 +10,116 @@ line level    source
 
    1          #include <STC89C5xRC.H>
    2          #include <Intrins.h>
-   3          //增加自定义类型，简化代码编写
-   4          typedef unsigned char u8;
-   5          typedef unsigned int u16;
-   6          
-   7          //需求：静态数码管显示,让第四个数码管显示5
-   8          //手册信息：DIG5对应Y4,P15 P14 P13 1 0 0
-   9          //封装显示状态
-  10          
-  11          //延时函数
-  12          void Delay1ms(u8 ms)    //@11.0592MHz
-  13          {
-  14   1        unsigned char i, j;
-  15   1        while(ms--)
-  16   1        {
-  17   2          _nop_();
-  18   2          i = 2;
-  19   2          j = 199;
-  20   2          do
-  21   2          {
-  22   3            while (--j);
-  23   3          } while (--i);
-  24   2        }
-  25   1      
-  26   1      }
+   3          #define SW1 P42
+   4          
+   5          // 增加自定义类型，简化代码编写
+   6          typedef unsigned char u8;
+   7          typedef unsigned int u16;
+   8          
+   9          // 延时函数
+  10          void Delay1ms(u16 ms)    //@11.0592MHz
+  11          {
+  12   1          unsigned char i, j;
+  13   1          while(ms--)
+  14   1          {
+  15   2              _nop_();
+  16   2              i = 2;
+  17   2              j = 199;
+  18   2              do
+  19   2              {
+  20   3                  while (--j);
+  21   3              } while (--i);
+  22   2          }
+  23   1      }
+  24          
+  25          // 定义数组，封装数字
+  26          u8 NixieTable[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
   27          
-  28          //定义数组，封装数字
-  29          u8 NixieTable[] = {0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F};
-  30          
-  31          //数码管显示
-  32          void NixieDisPlay(u8 Location,DisplayNum)
-  33          {
-  34   1        switch(Location)
-  35   1        {
-  36   2          case 1:P15 = 0;P14 = 0;P13 = 0;break;
-  37   2          case 2:P15 = 0;P14 = 0;P13 = 1;break;
-  38   2          case 3:P15 = 0;P14 = 1;P13 = 0;break;
-  39   2          case 4:P15 = 0;P14 = 1;P13 = 1;break;
-  40   2          case 5:P15 = 1;P14 = 0;P13 = 0;break;
-  41   2          case 6:P15 = 1;P14 = 0;P13 = 1;break;
-  42   2          case 7:P15 = 1;P14 = 1;P13 = 0;break;
-  43   2          case 8:P15 = 1;P14 = 1;P13 = 1;break;
-  44   2        }
-  45   1        P0 = NixieTable[DisplayNum];
-  46   1        Delay1ms(1);
-  47   1        P0 = 0x00;
-  48   1      }
-  49          
-  50          void main()
-  51          {
-  52   1      
-  53   1      
-  54   1        while(1)
-C51 COMPILER V9.60.7.0   MAIN                                                              08/02/2024 16:06:10 PAGE 2   
+  28          // 数码管显示
+  29          void NixieDisPlay(u8 Location, u8 DisplayNum)
+  30          {
+  31   1          switch(Location)
+  32   1          {
+  33   2              case 1: P15 = 0; P14 = 0; P13 = 0; break;
+  34   2              case 2: P15 = 0; P14 = 0; P13 = 1; break;
+  35   2              case 3: P15 = 0; P14 = 1; P13 = 0; break;
+  36   2              case 4: P15 = 0; P14 = 1; P13 = 1; break;
+  37   2              case 5: P15 = 1; P14 = 0; P13 = 0; break;
+  38   2              case 6: P15 = 1; P14 = 0; P13 = 1; break;
+  39   2              case 7: P15 = 1; P14 = 1; P13 = 0; break;
+  40   2              case 8: P15 = 1; P14 = 1; P13 = 1; break;
+  41   2          }
+  42   1          P0 = NixieTable[DisplayNum];
+  43   1          Delay1ms(1);
+  44   1          P0 = 0x00;
+  45   1      }
+  46          
+  47          void main()
+  48          {
+  49   1          u8 seconds_tens;   // 十位数
+  50   1          u8 seconds_units;  // 个位数
+  51   1          u8 seconds;        // 秒数
+  52   1          u16 i;             // 循环变量
+  53   1          bit is_running = 0; // 计时器状态变量
+  54   1      
+C51 COMPILER V9.60.7.0   MAIN                                                              08/02/2024 16:51:16 PAGE 2   
 
-  55   1        {
-  56   2          NixieDisPlay(1,1);
-  57   2          
-  58   2          NixieDisPlay(2,2);
-  59   2      
-  60   2          NixieDisPlay(3,3);
-  61   2      
-  62   2        } 
-  63   1      }
+  55   1          while(1)
+  56   1          {
+  57   2            if(SW1 == 0)
+  58   2            {
+  59   3              Delay1ms(10);
+  60   3              while(SW1 == 0);
+  61   3              Delay1ms(10);
+  62   3              is_running = !is_running; // 切换计时器状态
+  63   3              
+  64   3              if(is_running)
+  65   3              {
+  66   4                seconds = 99; // 初始化倒计时为99秒
+  67   4                while(is_running && seconds > 0)
+  68   4                {
+  69   5                   for(i = 0; i < 500; i++) // 让显示稳定1秒
+  70   5                    {
+  71   6                      if(SW1 == 0) // 检测按钮状态以停止计时
+  72   6                      {
+  73   7                       Delay1ms(10); // 消抖
+  74   7                       if(SW1 == 0) // 确认按钮按下
+  75   7                        {
+  76   8                        while(SW1 == 0); // 等待按钮释放
+  77   8                         Delay1ms(10); // 消抖
+  78   8                         is_running = 0; // 停止计时
+  79   8                          break; // 跳出循环
+  80   8                           }
+  81   7                          }
+  82   6                                  seconds_tens = seconds / 10;
+  83   6                                  seconds_units = seconds % 10;
+  84   6      
+  85   6                                  NixieDisPlay(1, seconds_tens); // 显示十位
+  86   6                                  NixieDisPlay(2, seconds_units); // 显示个位
+  87   6                              }
+  88   5                    if(is_running)
+  89   5                    {
+  90   6                      seconds--; // 倒计时减1
+  91   6                    }
+  92   5                }
+  93   4              }
+  94   3              else
+  95   3              { 
+  96   4                P0 = 0x00; // 关闭数码管显示
+  97   4              }
+  98   3            }  
+  99   2          }    
+ 100   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    150    ----
+   CODE SIZE        =    244    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     10    ----
+   DATA SIZE        =     10       2
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   BIT SIZE         =   ----       1
 END OF MODULE INFORMATION.
 
 
